@@ -1,0 +1,13 @@
+.title {
+  flex: 1;
+  margin: 0 16px;
+}
+
+.title.done {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+mat-progress-spinner {
+  margin-right: 8px;
+}

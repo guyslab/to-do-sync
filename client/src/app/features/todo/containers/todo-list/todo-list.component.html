@@ -1,0 +1,26 @@
+<mat-toolbar color="primary">
+  <span>In-Sync To-Do</span>
+  <span class="spacer"></span>
+  <button mat-icon-button (click)="add()">
+    <mat-icon>add</mat-icon>
+  </button>
+</mat-toolbar>
+
+<div class="container">
+  <div *ngIf="loading$ | async" class="loading-container">
+    <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+  </div>
+
+  <mat-list>
+    <app-todo-item *ngFor="let task of tasks$ | async"
+                  [task]="task"
+                  (edit)="onEdit(task)"
+                  (delete)="onDelete(task)"
+                  (toggle)="onToggle(task)">
+    </app-todo-item>
+    
+    <div *ngIf="(tasks$ | async)?.length === 0 && !(loading$ | async)" class="empty-state">
+      <p>No tasks yet. Click the + button to add one.</p>
+    </div>
+  </mat-list>
+</div>
