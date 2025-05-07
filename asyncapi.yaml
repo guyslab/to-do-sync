@@ -1,0 +1,101 @@
+asyncapi: 2.6.0
+info:
+  title: In-Sync To Do API Events
+  version: 1.0.0
+servers:
+  websocketServer:
+    url: ws://localhost:3000
+    protocol: ws
+    description: Local WebSocket server for real-time events
+channels:
+  "task_complete":
+    subscribe:
+      message:
+        name: task_complete
+        payload:
+          type: object
+          properties:
+            taskId:
+              type: string
+              description: ID of the task that was completed
+  "task_incomplete":
+    subscribe:
+      message:
+        name: task_incomplete
+        payload:
+          type: object
+          properties:
+            taskId:
+              type: string
+              description: ID of the task that was marked incomplete
+  "task_edited":
+    subscribe:
+      message:
+        name: task_edited
+        payload:
+          type: object
+          properties:
+            taskId:
+              type: string
+              description: ID of the task that was edited
+            changes:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: New title if changed
+  "task_created":
+    subscribe:
+      message:
+        name: task_created
+        payload:
+          type: object
+          properties:
+            task:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: ID of the newly created task
+                title:
+                  type: string
+                  description: Title of the new task
+  "task_deleted":
+    subscribe:
+      message:
+        name: task_deleted
+        payload:
+          type: object
+          properties:
+            taskId:
+              type: string
+              description: ID of the task that was deleted
+  "task_locked":
+    subscribe:
+      message:
+        name: task_locked
+        payload:
+          type: object
+          properties:
+            taskId:
+              type: string
+              description: ID of the task that was locked
+            editionId:
+              type: string
+              description: ID of the editing session
+  "task_released":
+    subscribe:
+      message:
+        name: task_released
+        payload:
+          type: object
+          properties:
+            taskId:
+              type: string
+              description: ID of the task that was released
+            editionId:
+              type: string
+              description: ID of the editing session that ended
+            wasUpdated:
+              type: boolean
+              description: Whether the task was updated during the editing session
