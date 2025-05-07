@@ -2,15 +2,14 @@ import express from "express";
 import { TaskDAO } from "../infrastructure/task.dao";
 import { TaskRepository } from "../repositories/task.repository";
 import { TaskService } from "../services/task.service";
-import { UnitOfWork } from "../domain/unit-of-work";
 
 const router = express.Router();
 
 function makeService(req: express.Request) {
-  // one UoW per request
-  const uow = new UnitOfWork();
-  (req as any).unitOfWork = uow;
-  const repo = new TaskRepository(new TaskDAO(), uow);
+  // Get the UnitOfWork from the request (attached by middleware)
+  const uow = (req as any).unitOfWork;
+  const dao = new TaskDAO();
+  const repo = new TaskRepository(dao, uow);
   return new TaskService(repo, uow);
 }
 

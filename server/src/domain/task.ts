@@ -1,13 +1,15 @@
 import { TaskData } from "./data/task.data";
 import { EditionSession } from "./edition-session";
+import { UnitOfWork } from "./unit-of-work";
 
 export class Task {
-  constructor(private data: TaskData) {}
+  constructor(private data: TaskData, private uow: UnitOfWork) {}
 
-  /* Business operations ‑- they only mutate `data` internally */
+  /* Business operations ‑- they only mutate `data` internally and update UoW */
   markComplete(value: boolean) {
     this.data.complete = value;
     this.touch();
+    this.uow.register(this);
   }
 
   startEdition(): EditionSession {
@@ -19,6 +21,7 @@ export class Task {
     this.data.lockedEditionId = session.id;
     this.data.lockExpiresAt = session.expiresAt;
     this.touch();
+    this.uow.register(this);
     return session;
   }
 
@@ -35,16 +38,18 @@ export class Task {
     this.data.lockedEditionId = undefined;
     this.data.lockExpiresAt = undefined;
     this.touch();
+    this.uow.register(this);
     return updated;
   }
 
   deleteSoft() {
     this.data.isDeleted = true;
     this.touch();
+    this.uow.register(this);
   }
 
   /* Helper */
-  static create(title: string): Task {
+  static create(title: string, uow: UnitOfWork): Task {
     const now = new Date();
     const d: TaskData = {
       title,
@@ -54,7 +59,9 @@ export class Task {
       createdAt: now,
       updatedAt: now
     };
-    return new Task(d);
+    const task = new Task(d, uow);
+    uow.register(task);
+    return task;
   }
 
   toDTO() {

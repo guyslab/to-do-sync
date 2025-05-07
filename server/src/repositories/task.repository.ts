@@ -8,17 +8,13 @@ export class TaskRepository {
   async byId(id: string): Promise<Task | null> {
     const data = await this.dao.findById(id);
     if (!data) return null;
-    return new Task(data);
-  }
-
-  track(task: Task) {
-    this.uow.register(task);
+    return new Task(data, this.uow);
   }
 
   async query(includeComplete: boolean, page: number) {
     const result = await this.dao.query(includeComplete, page);
     return {
-      tasks: result.tasks.map((d) => new Task(d)),
+      tasks: result.tasks.map((d) => new Task(d, this.uow)),
       total: result.total
     };
   }
