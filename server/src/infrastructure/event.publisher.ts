@@ -14,7 +14,6 @@ class EventPublisher {
       transports: ["websocket", "polling"],
       // Explicitly allow connections from any origin
       allowEIO3: true,
-      pingTimeout: 60000,
     });
     
     EventPublisher.io.on("connection", (socket) => {
