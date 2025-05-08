@@ -20,8 +20,9 @@ async function bootstrap() {
   EventPublisher.attachHTTPServer(httpServer);
 
   const PORT = process.env.PORT || 3000;
-  httpServer.listen(PORT, '0.0.0.0', () => {
+  httpServer.listen(Number(PORT), '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Server listening on all interfaces (0.0.0.0)`);
     console.log(`REST API: http://<your-ip>:${PORT}/tasks`);
     console.log("WebSocket events are enabled for real-time updates");
   });
