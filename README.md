@@ -1,5 +1,42 @@
 # Real-Time Data Synchronization in a To-Do App
 
+## Docker Compose Setup for Local Development
+
+This project uses Docker Compose to run all components (frontend, backend, and database) in a containerized environment.
+
+### Prerequisites
+- Docker and Docker Compose installed on your system
+- Git to clone the repository
+
+### Running the Application
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/guyslab/to-do-sync.git
+   cd to-do-sync
+   ```
+
+2. Start the application stack:
+   ```
+   docker-compose up
+   ```
+
+3. Access the application:
+   - Frontend: http://localhost:4200
+   - Backend API: http://localhost:3000
+
+4. To stop the application:
+   ```
+   docker-compose down
+   ```
+
+### Docker Configuration Details
+
+The Docker Compose setup includes:
+- **MongoDB**: Database service running on port 27017
+- **Express Backend**: Node.js server running on port 3000
+- **Angular Frontend**: Web application running on port 4200
+
 ## Frontend Design decisions
 - **Reactive Programming**: RxJS for handling asynchronous data streams
 - **State Management**: NgRx Store for centralized application state
@@ -22,9 +59,3 @@ MONGODB_DB_NAME=todos
 # Application Settings
 EDITION_EXPIRATION_MINUTES=3
 ```
-
-### Configuration Options
-
-- **MONGODB_URI**: MongoDB connection string
-- **MONGODB_DB_NAME**: Name of the MongoDB database
-- **EDITION_EXPIRATION_MINUTES**: Duration (in minutes) before an editing session expires

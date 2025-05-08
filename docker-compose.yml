@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # MongoDB service
+  mongodb:
+    image: mongo:latest
+    container_name: todo-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - todo-network
+    restart: unless-stopped
+
+  # Backend Express server
+  server:
+    image: node:24-alpine
+    container_name: todo-server
+    working_dir: /app
+    volumes:
+      - ./server:/app
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+      - MONGODB_DB_NAME=todos
+      - EDITION_EXPIRATION_MINUTES=3
+      - NODE_ENV=development
+    command: >
+      sh -c "npm install && npm run dev"
+    depends_on:
+      - mongodb
+    networks:
+      - todo-network
+    restart: unless-stopped
+
+  # Frontend Angular application
+  client:
+    image: node:24-alpine
+    container_name: todo-client
+    working_dir: /app
+    volumes:
+      - ./client:/app
+    ports:
+      - "4200:4200"
+    environment:
+      - NODE_ENV=development
+    command: >
+      sh -c "npm install && npm start -- --host 0.0.0.0 --disable-host-check"
+    depends_on:
+      - server
+    networks:
+      - todo-network
+    restart: unless-stopped
+
+networks:
+  todo-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
