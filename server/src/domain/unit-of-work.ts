@@ -10,7 +10,10 @@ export class UnitOfWork {
   }
 
   register(task: Task) {
-    this.dirtyTasks.set(task.toDTO().id, task);
+    const taskDTO = task.toDTO();
+    const taskData = task.getPersistable();
+    console.log(`UnitOfWork: Registering task ${taskDTO.id}, isDeleted=${taskData.isDeleted}`);
+    this.dirtyTasks.set(taskDTO.id, task);
   }
 
   hasWork() {
@@ -18,7 +21,10 @@ export class UnitOfWork {
   }
 
   async commit() {
-    if (!this.hasWork()) return;
+    if (!this.hasWork()) {
+      console.log('UnitOfWork: No changes to commit');
+      return;
+    }
     
     const tasks = Array.from(this.dirtyTasks.values());
     this.dirtyTasks.clear();
@@ -26,5 +32,7 @@ export class UnitOfWork {
     for (const task of tasks) {
       await this.dao.upsert(task.getPersistable());
     }
+    
+    console.log(`UnitOfWork: Committed ${tasks.length} task(s)`);
   }
 }

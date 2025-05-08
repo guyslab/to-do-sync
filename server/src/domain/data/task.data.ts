@@ -1,5 +1,5 @@
 export interface TaskData {
-  _id?: string;           // Mongo internal, never shown
+  id: string;
   title: string;
   complete: boolean;
   isDeleted: boolean;

@@ -1,4 +1,4 @@
-import { Document, ObjectId } from "mongodb";
+import { Document } from "mongodb";
 import MongoConnection from "./mongo";
 import { TaskData } from "../domain/data/task.data";
 
@@ -10,25 +10,22 @@ export class TaskDAO {
 
   async upsert(task: TaskData) {
     const collection = await this.coll();
-    // Create a copy of the task without _id for MongoDB operations
-    const taskForDb: any = { ...task };
     
-    if (!task._id) {
-      // For new tasks, remove the _id property completely
-      delete taskForDb._id;
-      const { insertedId } = await collection.insertOne(taskForDb);
-      task._id = insertedId.toString();
+    // Check if task already exists by logical id
+    const existingTask = await collection.findOne({ id: task.id });
+    
+    if (!existingTask) {
+      // For new tasks, insert with the logical id
+      await collection.insertOne(task);
     } else {
-      // For existing tasks, use the _id for lookup but don't include it in the update
-      const taskId = task._id;
-      delete taskForDb._id;
-      await collection.updateOne({ _id: new ObjectId(taskId) }, { $set: taskForDb });
+      // For existing tasks, use the logical id for lookup
+      await collection.updateOne({ id: task.id }, { $set: task });
     }
   }
 
   async findById(id: string): Promise<TaskData | null> {
     const collection = await this.coll();
-    const result = await collection.findOne({ _id: new ObjectId(id), isDeleted: false });
+    const result = await collection.findOne({ id: id, isDeleted: false });
     if (!result) return null;
     
     // Convert MongoDB document to TaskData
@@ -49,7 +46,7 @@ export class TaskDAO {
   // Helper method to convert MongoDB document to TaskData
   private documentToTaskData(doc: Document): TaskData {
     const taskData: TaskData = {
-      _id: doc._id.toString(),
+      id: doc.id,
       title: doc.title,
       complete: doc.complete,
       isDeleted: doc.isDeleted,

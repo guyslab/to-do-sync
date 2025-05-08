@@ -5,7 +5,6 @@ import { UnitOfWork } from "./unit-of-work";
 export class Task {
   constructor(private data: TaskData, private uow: UnitOfWork) {}
 
-  /* Business operations ‑- they only mutate `data` internally and update UoW */
   markComplete(value: boolean) {
     this.data.complete = value;
     this.touch();
@@ -25,7 +24,7 @@ export class Task {
     return session;
   }
 
-  stopEdition(sessionId: string, newTitle?: string): boolean /* wasUpdated */ {
+  stopEdition(sessionId: string, newTitle?: string): boolean {
     if (!this.data.isLocked || this.data.lockedEditionId !== sessionId) {
       throw new Error("locked");
     }
@@ -48,10 +47,10 @@ export class Task {
     this.uow.register(this);
   }
 
-  /* Helper */
   static create(title: string, uow: UnitOfWork): Task {
     const now = new Date();
     const d: TaskData = {
+      id: this.generateLogicalId(),
       title,
       complete: false,
       isDeleted: false,
@@ -64,9 +63,15 @@ export class Task {
     return task;
   }
 
+  private static generateLogicalId(): string {
+    const timestamp = Date.now();
+    const randomStr = Math.random().toString(36).substring(2, 10);
+    return `task-${timestamp}-${randomStr}`;
+  }
+
   toDTO() {
     return {
-      id: this.data._id,
+      id: this.data.id,
       title: this.data.title,
       complete: this.data.complete,
       createdAt: this.data.createdAt,
@@ -75,7 +80,6 @@ export class Task {
     };
   }
 
-  /* INTERNAL UTILS */
   getPersistable(): TaskData {
     return this.data;
   }

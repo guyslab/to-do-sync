@@ -16,6 +16,7 @@ export class TaskService {
 
   async create(title: string) {
     const task = Task.create(title, this.uow);
+    await this.uow.commit();
     const taskDTO = task.toDTO();
     EventPublisher.emit("task_created", { task: taskDTO });
     return taskDTO;
@@ -25,6 +26,7 @@ export class TaskService {
     const task = await this.repo.byId(id);
     if (!task) throw new Error("not-found");
     task.deleteSoft();
+    await this.uow.commit();
     EventPublisher.emit("task_deleted", { taskId: id });
   }
 
@@ -32,6 +34,7 @@ export class TaskService {
     const task = await this.repo.byId(id);
     if (!task) throw new Error("not-found");
     task.markComplete(complete);
+    await this.uow.commit();
     EventPublisher.emit(
       complete ? "task_complete" : "task_incomplete",
       { taskId: id }
@@ -43,6 +46,7 @@ export class TaskService {
     if (!task) throw new Error("not-found");
     try {
       const session = task.startEdition();
+      await this.uow.commit();
       EventPublisher.emit("task_locked", {
         taskId: id,
         editionId: session.id
@@ -59,6 +63,7 @@ export class TaskService {
     let wasUpdated: boolean;
     try {
       wasUpdated = task.stopEdition(editionId, newTitle);
+      await this.uow.commit();
     } catch {
       throw new Error("locked");
     }

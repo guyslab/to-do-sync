@@ -20,6 +20,7 @@ This project uses Docker Compose to run all components (frontend, backend, and d
    ```
    docker-compose up
    ```
+   Note: The database indexes are automatically created by the db-init service during startup.
 
 3. Access the application:
    - Frontend: http://localhost:4200
@@ -29,6 +30,13 @@ This project uses Docker Compose to run all components (frontend, backend, and d
    ```
    docker-compose down
    ```
+
+5. For a fresh database start (clearing all data and indexes):
+   ```
+   docker-compose down -v
+   docker-compose up
+   ```
+   Note: The `-v` flag removes all volumes, giving you a completely fresh MongoDB instance.
 
 ### Docker Configuration Details
 

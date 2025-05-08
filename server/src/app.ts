@@ -4,7 +4,7 @@ import cors from "cors";
 import { json } from "body-parser";
 import EventPublisher from "./infrastructure/event.publisher";
 import taskController from "./controllers/task.controller";
-import { unitOfWorkMiddleware } from "./middleware/unit-of-work.middleware";
+import { unitOfWork } from "./middleware/unit-of-work.middleware";
 
 async function bootstrap() {
   const app = express();
@@ -12,7 +12,7 @@ async function bootstrap() {
   app.use(json());
   
   // Apply the UnitOfWork middleware to all routes
-  app.use(unitOfWorkMiddleware);
+  app.use(unitOfWork);
 
   app.use("/tasks", taskController);
 
