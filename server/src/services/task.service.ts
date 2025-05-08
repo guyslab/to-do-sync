@@ -8,6 +8,25 @@ export class TaskService {
 
   async list(includeComplete: boolean, page: number) {
     const { tasks, total } = await this.repo.query(includeComplete, page);
+    
+    // Check for expired locks in all retrieved tasks
+    const tasksWithReleasedLocks = tasks.filter(task => task.checkAndReleaseExpiredLock());
+    
+    // If any locks were released, commit the changes
+    if (tasksWithReleasedLocks.length > 0) {
+      await this.uow.commit();
+      
+      // Emit task_released events for each released lock
+      tasksWithReleasedLocks.forEach(task => {
+        const taskDTO = task.toDTO();
+        EventPublisher.emit("task_released", { 
+          taskId: taskDTO.id,
+          editionId: "expired", // Indicate this was an expired lock
+          wasUpdated: false
+        });
+      });
+    }
+    
     return {
       tasks: tasks.map((t) => t.toDTO()),
       total

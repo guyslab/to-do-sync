@@ -47,6 +47,8 @@ export class TasksEffects {
           // Handle 409 Conflict specifically
           if (error.status === 409) {
             this.notification.showError('This task is currently being edited by someone else');
+            // Return failure but with empty error to prevent duplicate notifications
+            return of(TasksActions.startEditFailure({ taskId, error: '' }));
           }
           return of(TasksActions.startEditFailure({ 
             taskId, 
@@ -63,10 +65,18 @@ export class TasksEffects {
     exhaustMap(({ taskId, title, editionId }) =>
       this.api.finishEdition(taskId, editionId, title).pipe(
         map(task => TasksActions.finishEditSuccess({ task })),
-        catchError(error => of(TasksActions.finishEditFailure({ 
-          taskId, 
-          error: error.message || 'Failed to save changes' 
-        })))
+        catchError(error => {
+          // Handle 409 Conflict specifically
+          if (error.status === 409) {
+            this.notification.showError('This task is currently being edited by someone else');
+            // Return failure but with empty error to prevent duplicate notifications
+            return of(TasksActions.finishEditFailure({ taskId, error: '' }));
+          }
+          return of(TasksActions.finishEditFailure({ 
+            taskId, 
+            error: error.message || 'Failed to save changes' 
+          }));
+        })
       )
     )
   ));
@@ -77,10 +87,18 @@ export class TasksEffects {
     switchMap(({ taskId }) =>
       this.api.deleteTask(taskId).pipe(
         map(() => TasksActions.deleteTaskSuccess({ taskId })),
-        catchError(error => of(TasksActions.deleteTaskFailure({ 
-          taskId, 
-          error: error.message || 'Failed to delete task' 
-        })))
+        catchError(error => {
+          // Handle 409 Conflict specifically
+          if (error.status === 409) {
+            this.notification.showError('This task is currently being edited by someone else');
+            // Return failure but with empty error to prevent duplicate notifications
+            return of(TasksActions.deleteTaskFailure({ taskId, error: '' }));
+          }
+          return of(TasksActions.deleteTaskFailure({ 
+            taskId, 
+            error: error.message || 'Failed to delete task' 
+          }));
+        })
       )
     )
   ));
@@ -91,10 +109,18 @@ export class TasksEffects {
     switchMap(({ taskId, complete }) =>
       this.api.toggleCompletion(taskId, complete).pipe(
         map(() => TasksActions.toggleCompletionSuccess({ taskId, complete })),
-        catchError(error => of(TasksActions.toggleCompletionFailure({ 
-          taskId, 
-          error: error.message || 'Failed to update task status' 
-        })))
+        catchError(error => {
+          // Handle 409 Conflict specifically
+          if (error.status === 409) {
+            this.notification.showError('This task is currently being edited by someone else');
+            // Return failure but with empty error to prevent duplicate notifications
+            return of(TasksActions.toggleCompletionFailure({ taskId, error: '' }));
+          }
+          return of(TasksActions.toggleCompletionFailure({ 
+            taskId, 
+            error: error.message || 'Failed to update task status' 
+          }));
+        })
       )
     )
   ));
@@ -145,7 +171,8 @@ export class TasksEffects {
       TasksActions.toggleCompletionFailure
     ),
     tap(action => {
-      if ('error' in action) {
+      // Only show error notification if error is not empty
+      if ('error' in action && action.error) {
         this.notification.showError(action.error);
       }
     })

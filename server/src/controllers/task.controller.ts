@@ -77,8 +77,10 @@ router.post("/:id/editions", async (req, res) => {
     res
       .status(201)
       .location(`/tasks/${req.params.id}/editions/${session.id}`)
-      .set("X-Edition-Expires", session.expiresAt.toISOString())
-      .send();
+      .json({
+        editionId: session.id,
+        expires: session.expiresAt.toISOString()
+      });
   } catch (e) {
     if ((e as Error).message === "locked") {
       res.status(409).json({ error: "Task is already locked" });

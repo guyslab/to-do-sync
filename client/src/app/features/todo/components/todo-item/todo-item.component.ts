@@ -11,8 +11,4 @@ export class TodoItemComponent {
   @Output() edit = new EventEmitter<Task>();
   @Output() delete = new EventEmitter<Task>();
   @Output() toggle = new EventEmitter<Task>();
-
-  get canEdit(): boolean {
-    return !this.task.isLocked || !!this.task.editionId;
-  }
 }

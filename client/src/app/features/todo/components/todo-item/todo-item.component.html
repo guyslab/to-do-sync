@@ -1,19 +1,15 @@
 <mat-list-item>
   <span matListItemIcon>
     <mat-checkbox [checked]="task.complete"
-                  (change)="toggle.emit(task)"
-                  [disabled]="task.isLocked && !task.editionId">
+                  (change)="toggle.emit(task)">
     </mat-checkbox>
   </span>
   <span matListItemTitle class="title" [class.done]="task.complete">{{task.title}}</span>
   <div matListItemMeta>
-    <mat-progress-spinner diameter="16" mode="indeterminate"
-          *ngIf="task.isLocked && !task.editionId"></mat-progress-spinner>
-    <button mat-icon-button (click)="edit.emit(task)" [disabled]="task.isLocked && !task.editionId">
+    <button mat-icon-button (click)="edit.emit(task)">
         <mat-icon>edit</mat-icon>
     </button>
-    <button mat-icon-button color="warn" (click)="delete.emit(task)"
-            [disabled]="task.isLocked && !task.editionId">
+    <button mat-icon-button color="warn" (click)="delete.emit(task)">
         <mat-icon>delete</mat-icon>
     </button>
   </div>

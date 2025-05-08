@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
 import { Task } from '../models/task.model';
 import { environment } from '../../../environments/environment';
 
@@ -31,12 +31,13 @@ export class TaskApiService {
   }
 
   startEdition(id: string): Observable<{ editionId: string, expires: string }> {
-    return this.http.post<{ editionId: string, expires: string }>(`${this.apiUrl}/tasks/${id}/editions`, {});
+    return this.http.post<{ editionId: string, expires: string }>(
+      `${this.apiUrl}/tasks/${id}/editions`, 
+      {}
+    );
   }
 
   finishEdition(id: string, editionId: string, title: string): Observable<Task> {
-    return this.http.put<Task>(`${this.apiUrl}/tasks/${id}`, { title }, {
-      headers: { 'X-Edition-ID': editionId }
-    });
+    return this.http.put<Task>(`${this.apiUrl}/tasks/${id}/editions/${editionId}`, { title });
   }
 }

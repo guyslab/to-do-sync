@@ -106,6 +106,19 @@ paths:
       responses:
         '201':
           description: Edition started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  editionId:
+                    type: string
+                    description: Unique identifier for the edition session
+                  expires:
+                    type: string
+                    format: date-time
+                    description: Timestamp when the edition lock will expire
+                required: [editionId, expires]
           headers:
             location:
               description: relative url of the edition resource
@@ -114,11 +127,6 @@ paths:
               examples:
                 example:
                   value: /tasks/{taskId}/editions/{editionId}
-            X-Edition-Expires:
-              description: Timestamp when the edition lock will expire
-              schema:
-                type: string
-                format: date-time
         '409':
           description: The task is locked by others
   /tasks/{taskId}/editions/{editionId}:
