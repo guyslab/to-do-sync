@@ -1,4 +1,5 @@
 import { MongoClient, Db } from "mongodb";
+import config from "../config/config";
 
 class MongoConnection {
   private static instance: MongoConnection;
@@ -15,8 +16,8 @@ class MongoConnection {
   }
 
   private async init() {
-    const client = await MongoClient.connect("mongodb://localhost:27017");
-    this.db = client.db("todos");
+    const client = await MongoClient.connect(config.database.uri);
+    this.db = client.db(config.database.name);
   }
 
   collection(name: string) {

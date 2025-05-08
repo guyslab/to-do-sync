@@ -10,3 +10,21 @@
 - **Repository Pattern**: Focuses solely on data retrieval operations while domain objects handle state tracking
 - **Middleware Architecture**: UnitOfWork is created per request and automatically committed at the end of the request lifecycle
 - **Data Access Objects**: (DAOs) handle database operations
+
+## Configuration
+The application uses environment variables for configuration. Copy the `.env.example` file to `.env` in the server directory and adjust the values as needed:
+
+```
+# Database Configuration
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB_NAME=todos
+
+# Application Settings
+EDITION_EXPIRATION_MINUTES=3
+```
+
+### Configuration Options
+
+- **MONGODB_URI**: MongoDB connection string
+- **MONGODB_DB_NAME**: Name of the MongoDB database
+- **EDITION_EXPIRATION_MINUTES**: Duration (in minutes) before an editing session expires
