@@ -16,12 +16,6 @@ paths:
           schema:
             type: boolean
             default: false
-        - name: page
-          in: query
-          required: false
-          schema:
-            type: integer
-            default: 1
       responses:
         '200':
           description: Successful response
@@ -48,13 +42,6 @@ paths:
                           type: string
                           format: date-time
                           description: When the task was created
-                        updatedAt:
-                          type: string
-                          format: date-time
-                          description: When the task was last updated
-                        isLocked:
-                          type: boolean
-                          description: Whether the task is currently being edited
                       required: [id, title, complete, createdAt]
                   total:
                     type: integer
@@ -71,8 +58,8 @@ paths:
       responses:
         '204':
           description: No Content
-  /tasks/{taskId}/completions:
-    post:
+  /tasks/{taskId}/completion:
+    put:
       summary: Marks a task as complete or incomplete
       parameters:
         - name: taskId
@@ -96,7 +83,7 @@ paths:
           description: Success
   /tasks/{taskId}/editions:
     post:
-      summary: Start to edit task, locking the task for editing for others for a configurable time period
+      summary: Start to edit task, locking the task for editing for others for a preconfigured time period
       parameters:
         - name: taskId
           in: path

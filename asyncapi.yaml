@@ -28,22 +28,19 @@ channels:
             taskId:
               type: string
               description: ID of the task that was marked incomplete
-  "task_edited":
+  "task_renamed":
     subscribe:
       message:
-        name: task_edited
+        name: task_renamed
         payload:
           type: object
           properties:
             taskId:
               type: string
               description: ID of the task that was edited
-            changes:
-              type: object
-              properties:
-                title:
-                  type: string
-                  description: New title if changed
+            title:
+              type: string
+              description: New title 
   "task_created":
     subscribe:
       message:
@@ -51,15 +48,12 @@ channels:
         payload:
           type: object
           properties:
-            task:
-              type: object
-              properties:
-                id:
-                  type: string
-                  description: ID of the newly created task
-                title:
-                  type: string
-                  description: Title of the new task
+            taskId:
+              type: string
+              description: ID of the newly created task
+            title:
+              type: string
+              description: Title of the new task
   "task_deleted":
     subscribe:
       message:
@@ -70,32 +64,3 @@ channels:
             taskId:
               type: string
               description: ID of the task that was deleted
-  "task_locked":
-    subscribe:
-      message:
-        name: task_locked
-        payload:
-          type: object
-          properties:
-            taskId:
-              type: string
-              description: ID of the task that was locked
-            editionId:
-              type: string
-              description: ID of the editing session
-  "task_released":
-    subscribe:
-      message:
-        name: task_released
-        payload:
-          type: object
-          properties:
-            taskId:
-              type: string
-              description: ID of the task that was released
-            editionId:
-              type: string
-              description: ID of the editing session that ended
-            wasUpdated:
-              type: boolean
-              description: Whether the task was updated during the editing session
