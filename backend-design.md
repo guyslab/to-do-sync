@@ -20,7 +20,7 @@ interface TaskRepository
 # Task Factory
 interface TaskFactory
 {
-    createByData(data: TaskData, dataTx: DataTransaction) : Task
+    createByData(data: TaskData) : Task
     createByTitle(title: string): Task
 }
 
@@ -66,13 +66,13 @@ interface DataTransaction
     register(typeName: string, id: string, data: any): void
     commit(): Promise<void>
 }
-interface DataCollectionUpserter
+interface DataCollectionModifier
 {
-    upsert<TData>(collection: string, id?: string, data: TData): void
+    upsert<TData>(collection: string, id: string, data: TData): Promise<void>
 }
 interface DataCollectionQuerier
 {
-    queryByLiteral(collection: string, literal: any): TData
+    queryByLiteral<TData>(collection: string, literal: any): Promise<TData[]>
 }
 
 # Unit of Work
@@ -93,7 +93,9 @@ class DefaultTask implements Task, TaskContext
         isNew: boolean)
     {
         this._state = this.createInitialState();
-        this._expirationMinutes = config.edition.expirationMinutes,
+        this._expirationMinutes = config.edition.expirationMinutes;
+        if (isNew) 
+            this._dataTx.register('task', this._data.id, this._data);
     }    
     complete(): void => this._state.complete();
     incomplete(): void => this._state.incomplete();
@@ -161,4 +163,157 @@ class NotEditingTaskState implements TaskState {
     setTitle(title: string, lockKey: string): void => throw new Error("unlocked");
     delete(): void => _ctx.markDeleted();
     lockTitle(): TaskKey => _ctx.setKey();
+}
+
+class DefaultTaskService implements TaskService {
+    constructor(
+        private _taskRepository: TaskRepository,
+        private _taskFactory: TaskFactory,
+        private _unitOfWork: UnitOfWork
+    ) {}
+
+    async getAll(includeComplete: boolean): Promise<TaskDtoOut[]> {
+        const tasks = await this._taskRepository.getAll(includeComplete);
+        return tasks.map(task => task.toDto());
+    }
+
+    async complete(id: string): Promise<void> {
+        const task = await this._taskRepository.getById(id);
+        if (!task) throw new Error("notFound");
+        task.complete();
+        await this._unitOfWork.commit();
+    }
+
+    async incomplete(id: string): Promise<void> {
+        const task = await this._taskRepository.getById(id);
+        if (!task) throw new Error("notFound");
+        task.incomplete();
+        await this._unitOfWork.commit();
+    }
+
+    async beginEdition(id: string): Promise<TaskKeyDtoOut> {
+        const task = await this._taskRepository.getById(id);
+        if (!task) throw new Error("notFound");
+        const key = task.lockTitle();
+        await this._unitOfWork.commit();
+        return {
+            key: key.key,
+            expiresAt: key.expiresAt
+        };
+    }
+
+    async endEdition(id: string, title: string, lockKey: string): Promise<void> {
+        const task = await this._taskRepository.getById(id);
+        if (!task) throw new Error("notiFound");
+        task.setTitle(title, lockKey);
+        await this._unitOfWork.commit();
+    }
+
+    async delete(id: string): Promise<void> {
+        const task = await this._taskRepository.getById(id);
+        if (!task) throw new Error("notFound");
+        task.delete();
+        await this._unitOfWork.commit();
+    }
+
+    async create(title: string): Promise<string> {
+        const task = this._taskFactory.createByTitle(title);
+        await this._unitOfWork.commit();
+        return task.toDto().id;
+    }
+   }
+}
+
+class DefaultTaskRepository implements TaskRepository {
+    private _collection: string;
+    constructor(
+        private _dataQuerier: DataCollectionQuerier
+    ) {
+        _collection = "task";
+    }
+
+    async getAll(includeComplete: boolean): Promise<Task[]> {
+        const taskDataList = await _dataQuerier.getByLiteral(_collection, { deleted: false, complete: includeComplete});
+        return taskDataList.map(data => this._taskFactory.createByData(data));
+    }
+
+    async getById(id: string): Promise<Task | null> {
+        const taskDataList = await _dataQuerier.getByLiteral(_collection, { deleted: false, id });
+        if (!taskDataList.length) return null;
+        const taskData = taskDataList[0];
+        if (!taskData) return null;
+        return this._taskFactory.createByData(taskData);
+    }
+}
+
+class DefaultTaskFactory implements TaskFactory {
+    constructor(
+        private _tx: DataTransaction,
+        private _idGenerator: IdGenerator)
+    { }
+
+    createByData(data: TaskData): Task {
+        return new DefaultTask(data, _tx, false);
+    }
+
+    createByTitle(title: string): Task {
+        const data: TaskData = {
+            id: _idGenerator.create(),
+            title: title,
+            complete: false,
+            deleted: false,
+            createdAt: new Date()
+        };
+        return new DefaultTask(data, _tx, true);
+    }
+}
+
+class DefaultUnitOfWork implements UnitOfWork {
+    constructor(
+        private _tx: DataTransaction,
+        //private _msgPub: MessagesPublisher
+    ) {}
+
+    async commit(): Promise<void> {
+        await _tx.commit();
+        // await _msgPub.commit();
+    }
+}
+
+class DefaultDataTransaction implements DataTransaction {
+    private _changes: Map<string, Map<string, any>> = new Map();
+    constructor(
+        private _dataModifier: DataCollectionModifier
+    ) {}
+
+    register(typeName: string, id: string, data: any): void {
+        if (!this._changes.has(typeName)) {
+            this._changes.set(typeName, new Map());
+        }
+        this._changes.get(typeName)!.set(id, data);
+    }
+
+    async commit(): Promise<void> {
+        for (const [typeName, entities] of this._changes.entries()) {
+            for (const [id, data] of entities.entries())
+                await _dataModifier.upsert(typeName, id, data);        
+    }
+}
+
+class DefaultDataCollectionModifier implements DataCollectionModifier {
+    constructor(private _db: any) {} 
+    async upsert<TData>(collection: string, id: string, data: TData): Promise<void> {
+        await this._db.collection(collection).updateOne(
+            { id },
+            { $set: data },
+            { upsert: true });
+    }
+}
+
+class DefaultDataCollectionQuerier implements DataCollectionQuerier {
+    constructor(private _db: any) {} 
+    async queryByLiteral<TData>(collection: string, literal: any): Promise<TData[]> {
+        return await this._db.collection(collection).find(literal).toArray();
+    }
+   }
 }
