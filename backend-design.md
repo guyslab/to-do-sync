@@ -75,6 +75,17 @@ interface DataCollectionQuerier
     queryByLiteral<TData>(collection: string, literal: any): Promise<TData[]>
 }
 
+# Messaging
+interface MessagesOutbox
+{
+    register<TMsg>(msgType: string, msgPayload: TMsg)
+    commit(): Promise<void>
+}
+interface MessagesPublisher
+{
+    publish<TMsg>(msgType: string, msgPayload: TMsg): Promise<void>
+}
+
 # Unit of Work
 interface UnitOfWork
 {
@@ -169,7 +180,8 @@ class DefaultTaskService implements TaskService {
     constructor(
         private _taskRepository: TaskRepository,
         private _taskFactory: TaskFactory,
-        private _unitOfWork: UnitOfWork
+        private _unitOfWork: UnitOfWork,
+        private _outbox: MessageOutbox
     ) {}
 
     async getAll(includeComplete: boolean): Promise<TaskDtoOut[]> {
@@ -181,6 +193,7 @@ class DefaultTaskService implements TaskService {
         const task = await this._taskRepository.getById(id);
         if (!task) throw new Error("notFound");
         task.complete();
+        this._outbox.register('task_complete', { taskId: id });
         await this._unitOfWork.commit();
     }
 
@@ -188,6 +201,7 @@ class DefaultTaskService implements TaskService {
         const task = await this._taskRepository.getById(id);
         if (!task) throw new Error("notFound");
         task.incomplete();
+        this._outbox.register('task_incomplete', { taskId: id });
         await this._unitOfWork.commit();
     }
 
@@ -204,8 +218,9 @@ class DefaultTaskService implements TaskService {
 
     async endEdition(id: string, title: string, lockKey: string): Promise<void> {
         const task = await this._taskRepository.getById(id);
-        if (!task) throw new Error("notiFound");
+        if (!task) throw new Error("notFound");
         task.setTitle(title, lockKey);
+        this._outbox.register('task_renamed', { taskId: id, title });
         await this._unitOfWork.commit();
     }
 
@@ -213,11 +228,13 @@ class DefaultTaskService implements TaskService {
         const task = await this._taskRepository.getById(id);
         if (!task) throw new Error("notFound");
         task.delete();
+        this._outbox.register('task_deleted', { taskId: id });
         await this._unitOfWork.commit();
     }
 
     async create(title: string): Promise<string> {
         const task = this._taskFactory.createByTitle(title);
+        this._outbox.register('task_created', { taskId: id, title });
         await this._unitOfWork.commit();
         return task.toDto().id;
     }
@@ -271,12 +288,12 @@ class DefaultTaskFactory implements TaskFactory {
 class DefaultUnitOfWork implements UnitOfWork {
     constructor(
         private _tx: DataTransaction,
-        //private _msgPub: MessagesPublisher
+        private _outbox: MessageOutbox
     ) {}
 
     async commit(): Promise<void> {
         await _tx.commit();
-        // await _msgPub.commit();
+        await _outbox.commit();
     }
 }
 
@@ -296,7 +313,8 @@ class DefaultDataTransaction implements DataTransaction {
     async commit(): Promise<void> {
         for (const [typeName, entities] of this._changes.entries()) {
             for (const [id, data] of entities.entries())
-                await _dataModifier.upsert(typeName, id, data);        
+                await _dataModifier.upsert(typeName, id, data);
+        this._changes.clear();
     }
 }
 
@@ -316,4 +334,34 @@ class DefaultDataCollectionQuerier implements DataCollectionQuerier {
         return await this._db.collection(collection).find(literal).toArray();
     }
    }
+}
+
+class DefaultMessagesOutbox implements MessagesOutbox
+{
+    private _messages: Map<string, string[]> = new Map();
+    constructor(
+        private _publisher: MessagePublisher
+    ) {}
+
+    register<TMsg>(msgType: string, msgPayload: TMsg): void {
+        if (!this._changes.has(msgType)) {
+            this._changes.set(msgType, []);
+        }
+        this._changes.get(msgType)!.push(msgPayload);
+    }
+
+    async commit(): Promise<void> {
+        for (const [msgType, payloads] of this._messages.entries()) {
+            for (const payload of payloads)
+                await _publisher.publish(typeName, payload);
+        this._messages.clear();
+    }
+}
+class DefaultMessagesPublisher implements MessagesPublisher
+{
+    constructor(private _wsServer: any) { } 
+    async publish<TMsg>(msgType: string, msgPayload: TMsg): Promise<void>
+    {
+        await _wsServer.emit(msgType, msgPayload);
+    }
 }
