@@ -37,19 +37,11 @@ export class TaskListComponent implements OnInit, OnDestroy {
   private setupWebSocketSubscriptions(): void {
     // Handle task created events
     this.subscriptions.push(
-      this.taskService.taskCreated$.subscribe(event => {
-        // Only add the task if it doesn't already exist in our list
-        if (!this.tasks.some(task => task.id === event.taskId) && event.title) {
-          const newTask: Task = {
-            id: event.taskId,
-            title: event.title,
-            complete: false,
-            createdAt: new Date().toISOString()
-          };
+      this.taskService.taskCreated$.subscribe(newTask => {
           this.tasks = [...this.tasks, newTask];
-        }
-      })
-    );
+          console.log(newTask, this.tasks.length)
+        })
+      );
 
     // Handle task deleted events
     this.subscriptions.push(
@@ -92,12 +84,9 @@ export class TaskListComponent implements OnInit, OnDestroy {
     if (!this.newTaskTitle.trim()) return;
 
     this.taskService.createTask(this.newTaskTitle).subscribe({
-      next: (createdTask) => {
-        // Add the task to our list using the response from the API
-        // We don't need to handle the WebSocket event separately as we're already adding the task here
-        this.tasks = [...this.tasks, createdTask];
-        this.newTaskTitle = '';
-      },
+      // We don't take any action here, as updating the UI occurs in the
+        // $taskCreated subscription
+      next: _ => { },
       error: (error) => {
         console.error('Error creating task:', error);
       }
