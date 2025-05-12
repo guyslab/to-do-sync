@@ -5,6 +5,7 @@ export class DefaultMessagesPublisher implements MessagesPublisher {
   constructor(private _wsServer: SocketIOServer) {}
   
   async publish<TMsg>(msgType: string, msgPayload: TMsg): Promise<void> {
+    console.log(`Publishing message: ${msgType}`, msgPayload);
     this._wsServer.emit(msgType, msgPayload);
   }
 }
