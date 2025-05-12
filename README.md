@@ -45,10 +45,6 @@ The Docker Compose setup includes:
 - **Express Backend**: Node.js server running on port 3000
 - **Angular Frontend**: Web application running on port 4200
 
-## Frontend Design decisions
-- **Reactive Programming**: RxJS for handling asynchronous data streams
-- **State Management**: NgRx Store for centralized application state
-
 ## Configuration
 The application uses environment variables for configuration. Copy the `.env.example` file to `.env` in the server directory and adjust the values as needed:
 
