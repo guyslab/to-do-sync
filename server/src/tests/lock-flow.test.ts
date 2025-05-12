@@ -6,50 +6,42 @@ import { DefaultMessagesOutbox } from '../infrastructure/messaging/messages-outb
 import { DefaultMessagesPublisher } from '../infrastructure/messaging/messages-publisher';
 import { DefaultUnitOfWork } from '../infrastructure/unit-of-work';
 import { TaskService } from '../domain/interfaces/service.interface';
+import { TaskData } from '../domain/interfaces/task.interface';
 
-// Mock database for testing
-class MockDatabase {
-  private collections: Map<string, any[]> = new Map();
+// Mock the mongodb module
+jest.mock('../infrastructure/database/mongodb', () => {
+  // Create a mock database with task data
+  const mockTaskData: TaskData = {
+    id: 'test-task-id',
+    title: 'Test Task',
+    complete: false,
+    deleted: false,
+    createdAt: new Date()
+  };
 
-  collection(name: string) {
-    if (!this.collections.has(name)) {
-      this.collections.set(name, []);
-    }
-
-    return {
-      find: (query: any) => {
-        return {
-          toArray: async () => {
-            const collection = this.collections.get(name) || [];
-            return collection.filter(item => {
-              for (const key in query) {
-                if (query[key] !== item[key]) {
-                  return false;
-                }
-              }
-              return true;
-            });
-          }
-        };
-      },
-      updateOne: async (filter: any, update: any, options: any) => {
-        const collection = this.collections.get(name) || [];
-        const index = collection.findIndex(item => item.id === filter.id);
-        
-        if (index >= 0) {
-          // Update existing item
-          collection[index] = { ...collection[index], ...update.$set };
-        } else if (options.upsert) {
-          // Insert new item
-          collection.push({ ...filter, ...update.$set });
+  const mockDb = {
+    collection: jest.fn().mockReturnValue({
+      find: jest.fn().mockImplementation((query) => {
+        // Return the mock task when queried by id
+        if (query && query.id === 'test-task-id') {
+          return {
+            toArray: jest.fn().mockResolvedValue([mockTaskData])
+          };
         }
-        
-        this.collections.set(name, collection);
-        return { acknowledged: true };
-      }
-    };
-  }
-}
+        return {
+          toArray: jest.fn().mockResolvedValue([])
+        };
+      }),
+      updateOne: jest.fn().mockResolvedValue({ acknowledged: true })
+    })
+  };
+  
+  return {
+    getDb: jest.fn(() => mockDb),
+    connectToDatabase: jest.fn().mockResolvedValue(mockDb),
+    closeDatabaseConnection: jest.fn().mockResolvedValue(undefined)
+  };
+});
 
 // Mock WebSocket server for testing
 class MockWebSocketServer {
@@ -61,16 +53,12 @@ class MockWebSocketServer {
 
 describe('Task Locking Workflow', () => {
   let taskService: TaskService;
-  let taskId: string;
+  const taskId = 'test-task-id';
   
   beforeEach(async () => {
     // Setup dependencies
-    const db = new MockDatabase();
     const dataModifier = new DefaultDataCollectionModifier();
-    (dataModifier as any)._db = db; // Inject mock database
-    
     const dataQuerier = new DefaultDataCollectionQuerier();
-    (dataQuerier as any)._db = db; // Inject mock database
     
     const dataTx = new DefaultDataTransaction(dataModifier);
     const wsServer = new MockWebSocketServer();
@@ -81,9 +69,6 @@ describe('Task Locking Workflow', () => {
     // Create task service using factory
     const taskServiceFactory = new DefaultTaskServiceFactory(dataTx, outbox, unitOfWork);
     taskService = taskServiceFactory.createTaskService();
-    
-    // Create a test task
-    taskId = await taskService.create('Test Task');
   });
   
   test('should successfully complete the locking workflow', async () => {

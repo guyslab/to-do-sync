@@ -25,9 +25,9 @@ export class WsService {
 
   connect(): Observable<WsEvent> {
     if (!this.socket) {
-      console.log('Connecting to WebSocket server at:', environment.apiUrl);
+      console.log('Connecting to WebSocket server at:', environment.wsUrl);
       
-      this.socket = io(environment.apiUrl, {
+      this.socket = io(environment.wsUrl, {
         transports: ['websocket', 'polling'],
         reconnectionAttempts: this.maxReconnectAttempts,
         reconnectionDelay: this.reconnectDelay,
