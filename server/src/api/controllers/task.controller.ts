@@ -28,7 +28,14 @@ export class TaskController {
       const taskService = req.taskServiceFactory.createTaskService();
       
       const id = await taskService.create(title);
-      res.status(201).json({ id });
+      
+      // Return the complete task object instead of just the ID
+      res.status(201).json({ 
+        id, 
+        title, 
+        complete: false,
+        createdAt: new Date().toISOString() 
+      });
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }

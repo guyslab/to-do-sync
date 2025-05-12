@@ -1,11 +1,15 @@
 import { MessagesPublisher } from '../../domain/interfaces/infrastructure.interface';
-import { Server as SocketIOServer } from 'socket.io';
+import { WebSocketManager } from './websocket-manager';
 
 export class DefaultMessagesPublisher implements MessagesPublisher {
-  constructor(private _wsServer: SocketIOServer) {}
+  private _wsManager: WebSocketManager;
+  
+  constructor() {
+    this._wsManager = WebSocketManager.getInstance();
+  }
   
   async publish<TMsg>(msgType: string, msgPayload: TMsg): Promise<void> {
     console.log(`Publishing message: ${msgType}`, msgPayload);
-    this._wsServer.emit(msgType, msgPayload);
+    this._wsManager.broadcast(msgType, msgPayload);
   }
 }

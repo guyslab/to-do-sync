@@ -4,7 +4,6 @@ import { DefaultDataTransaction } from '../../infrastructure/database/data-trans
 import { DefaultMessagesOutbox } from '../../infrastructure/messaging/messages-outbox';
 import { DefaultUnitOfWork } from '../../infrastructure/unit-of-work';
 import { getDb } from '../../infrastructure/database/mongodb';
-import { Server as SocketIOServer } from 'socket.io';
 import { DefaultMessagesPublisher } from '../../infrastructure/messaging/messages-publisher';
 import { TaskServiceFactory } from '../../domain/interfaces/factory.interface';
 import { DefaultTaskServiceFactory } from '../../domain/services/task-service-factory';
@@ -18,7 +17,7 @@ declare global {
   }
 }
 
-export function createRequestContextMiddleware(io: SocketIOServer) {
+export function createRequestContextMiddleware() {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       // Create request-scoped instances
@@ -27,7 +26,7 @@ export function createRequestContextMiddleware(io: SocketIOServer) {
       const dataTransaction = new DefaultDataTransaction(dataModifier);
       
       // Create messaging components
-      const messagesPublisher = new DefaultMessagesPublisher(io);
+      const messagesPublisher = new DefaultMessagesPublisher();
       const messagesOutbox = new DefaultMessagesOutbox(messagesPublisher);
       
       // Create unit of work
