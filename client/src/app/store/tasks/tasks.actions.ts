@@ -108,8 +108,8 @@ export const wsTaskDeleted = createAction(
   props<{ taskId: string }>()
 );
 
-export const wsTaskEdited = createAction(
-  '[WebSocket] Task Edited',
+export const wsTaskRenamed = createAction(
+  '[WebSocket] Task Renamed',
   props<{ taskId: string, changes: Partial<Task> }>()
 );
 
@@ -123,12 +123,4 @@ export const wsTaskIncomplete = createAction(
   props<{ taskId: string }>()
 );
 
-export const wsTaskLocked = createAction(
-  '[WebSocket] Task Locked',
-  props<{ taskId: string, editionId: string }>()
-);
 
-export const wsTaskReleased = createAction(
-  '[WebSocket] Task Released',
-  props<{ taskId: string, editionId: string, wasUpdated: boolean }>()
-);

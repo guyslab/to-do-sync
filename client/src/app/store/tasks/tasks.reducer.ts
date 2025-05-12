@@ -150,50 +150,21 @@ export const reducer = createReducer(
 
   // WebSocket Events
   on(TasksActions.wsTaskCreated, (state, { task }) => 
-    adapter.addOne(task, state)
+    adapter.addOne(task, { ...state })
   ),
   on(TasksActions.wsTaskDeleted, (state, { taskId }) => 
-    adapter.removeOne(taskId, state)
+    adapter.removeOne(taskId, { ...state })
   ),
-  on(TasksActions.wsTaskEdited, (state, { taskId, changes }) => 
-    adapter.updateOne({ id: taskId, changes }, state)
+  on(TasksActions.wsTaskRenamed, (state, { taskId, changes }) => 
+    adapter.updateOne({ id: taskId, changes }, { ...state })
   ),
   on(TasksActions.wsTaskComplete, (state, { taskId }) => 
-    adapter.updateOne({ id: taskId, changes: { complete: true } }, state)
+    adapter.updateOne({ id: taskId, changes: { complete: true } }, { ...state })
   ),
   on(TasksActions.wsTaskIncomplete, (state, { taskId }) => 
-    adapter.updateOne({ id: taskId, changes: { complete: false } }, state)
+    adapter.updateOne({ id: taskId, changes: { complete: false } }, { ...state })
   ),
-  on(TasksActions.wsTaskLocked, (state, { taskId, editionId }) => {
-    // Only set isLocked if it's not our own edition
-    const task = state.entities[taskId];
-    if (!task) return state;
-    
-    const isOurEdition = state.editing[taskId]?.editionId === editionId;
-    
-    if (!isOurEdition) {
-      return adapter.updateOne(
-        { id: taskId, changes: { isLocked: true } },
-        state
-      );
-    }
-    
-    return state;
-  }),
-  on(TasksActions.wsTaskReleased, (state, { taskId, editionId, wasUpdated }) => {
-    const task = state.entities[taskId];
-    if (!task) return state;
-    
-    // If it's our own edition being released, we've already handled it
-    const isOurEdition = state.editing[taskId]?.editionId === editionId;
-    if (isOurEdition) return state;
-    
-    // Otherwise, mark the task as unlocked
-    return adapter.updateOne(
-      { id: taskId, changes: { isLocked: false } },
-      state
-    );
-  })
+
 );
 
 // Export the entity adapter selectors

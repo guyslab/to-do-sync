@@ -37,10 +37,13 @@ channels:
           properties:
             taskId:
               type: string
-              description: ID of the task that was edited
-            title:
-              type: string
-              description: New title 
+              description: ID of the task that was renamed
+            changes:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: New title of the task
   "task_created":
     subscribe:
       message:

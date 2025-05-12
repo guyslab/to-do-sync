@@ -133,8 +133,8 @@ export class TasksEffects {
           return TasksActions.wsTaskCreated({ task: event.task });
         case 'task_deleted':
           return TasksActions.wsTaskDeleted({ taskId: event.taskId });
-        case 'task_edited':
-          return TasksActions.wsTaskEdited({ 
+        case 'task_renamed':
+          return TasksActions.wsTaskRenamed({ 
             taskId: event.taskId, 
             changes: event.changes 
           });
@@ -142,17 +142,6 @@ export class TasksEffects {
           return TasksActions.wsTaskComplete({ taskId: event.taskId });
         case 'task_incomplete':
           return TasksActions.wsTaskIncomplete({ taskId: event.taskId });
-        case 'task_locked':
-          return TasksActions.wsTaskLocked({ 
-            taskId: event.taskId, 
-            editionId: event.editionId 
-          });
-        case 'task_released':
-          return TasksActions.wsTaskReleased({ 
-            taskId: event.taskId, 
-            editionId: event.editionId, 
-            wasUpdated: event.wasUpdated 
-          });
         default:
           const _exhaustiveCheck: never = event;
           return { type: 'UNKNOWN_WS_EVENT' };

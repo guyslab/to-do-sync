@@ -7,11 +7,9 @@ import { io, Socket } from 'socket.io-client';
 export type WsEvent = 
   | { type: 'task_created', task: Task }
   | { type: 'task_deleted', taskId: string }
-  | { type: 'task_edited', taskId: string, changes: Partial<Task> }
+  | { type: 'task_renamed', taskId: string, changes: Partial<Task> }
   | { type: 'task_complete', taskId: string }
-  | { type: 'task_incomplete', taskId: string }
-  | { type: 'task_locked', taskId: string, editionId: string }
-  | { type: 'task_released', taskId: string, editionId: string, wasUpdated: boolean };
+  | { type: 'task_incomplete', taskId: string };
 
 @Injectable({
   providedIn: 'root'
@@ -63,8 +61,8 @@ export class WsService {
         this.events$.next({ type: 'task_deleted', taskId });
       });
 
-      this.socket.on('task_edited', (data: { taskId: string, changes: Partial<Task> }) => {
-        this.events$.next({ type: 'task_edited', taskId: data.taskId, changes: data.changes });
+      this.socket.on('task_renamed', (data: { taskId: string, changes: Partial<Task> }) => {
+        this.events$.next({ type: 'task_renamed', taskId: data.taskId, changes: data.changes });
       });
 
       this.socket.on('task_complete', (taskId: string) => {
@@ -73,19 +71,6 @@ export class WsService {
 
       this.socket.on('task_incomplete', (taskId: string) => {
         this.events$.next({ type: 'task_incomplete', taskId });
-      });
-
-      this.socket.on('task_locked', (data: { taskId: string, editionId: string }) => {
-        this.events$.next({ type: 'task_locked', taskId: data.taskId, editionId: data.editionId });
-      });
-
-      this.socket.on('task_released', (data: { taskId: string, editionId: string, wasUpdated: boolean }) => {
-        this.events$.next({ 
-          type: 'task_released', 
-          taskId: data.taskId, 
-          editionId: data.editionId, 
-          wasUpdated: data.wasUpdated 
-        });
       });
     }
 
