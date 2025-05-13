@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Task } from '../../../../core/models/task.model';
 import { TaskService } from '../../services/task.service';
 
@@ -10,7 +11,10 @@ import { TaskService } from '../../services/task.service';
 export class TaskItemComponent {
   @Input() task!: Task;
   
-  constructor(private taskService: TaskService) {}
+  constructor(
+    private taskService: TaskService,
+    private snackBar: MatSnackBar
+  ) {}
 
   /**
    * Toggles task completion status
@@ -39,7 +43,10 @@ export class TaskItemComponent {
       error: (error) => {
         console.error('Error beginning task edition:', error);
         if (error.message === 'RENAMING_LOCKED') {
-          alert('Renaming locked');
+          this.snackBar.open('Renaming locked', 'Close', {
+            duration: 3000,
+            panelClass: ['mat-warn']
+          });
         }
       }
     });

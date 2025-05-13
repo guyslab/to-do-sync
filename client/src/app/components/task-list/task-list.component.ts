@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription } from 'rxjs';
 import { Task } from '../../models/task.model';
 import { TaskService } from '../../services/task.service';
@@ -12,7 +13,10 @@ export class TaskListComponent implements OnInit, OnDestroy {
   newTaskTitle: string = '';
   private subscriptions: Subscription[] = [];
 
-  constructor(private taskService: TaskService) {}
+  constructor(
+    private taskService: TaskService,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit(): void {
     this.loadTasks();
@@ -128,7 +132,10 @@ export class TaskListComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error('Error beginning task edition:', error);
         if (error.message === 'RENAMING_LOCKED') {
-          alert('Renaming locked');
+          this.snackBar.open('Renaming locked', 'Close', {
+            duration: 3000,
+            panelClass: ['mat-warn']
+          });
         }
       }
     });
