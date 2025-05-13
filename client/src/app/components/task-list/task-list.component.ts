@@ -35,7 +35,6 @@ export class TaskListComponent implements OnInit, OnDestroy {
   }
 
   private setupWebSocketSubscriptions(): void {
-    // Handle task created events
     this.subscriptions.push(
       this.taskService.taskCreated$.subscribe(newTask => {
           this.tasks = [...this.tasks, newTask];
@@ -43,14 +42,12 @@ export class TaskListComponent implements OnInit, OnDestroy {
         })
       );
 
-    // Handle task deleted events
     this.subscriptions.push(
       this.taskService.taskDeleted$.subscribe(event => {
         this.tasks = this.tasks.filter(task => task.id !== event.taskId);
       })
     );
 
-    // Handle task completed events
     this.subscriptions.push(
       this.taskService.taskCompleted$.subscribe(event => {
         this.tasks = this.tasks.map(task => 
@@ -59,7 +56,6 @@ export class TaskListComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Handle task incompleted events
     this.subscriptions.push(
       this.taskService.taskIncompleted$.subscribe(event => {
         this.tasks = this.tasks.map(task => 
@@ -68,7 +64,6 @@ export class TaskListComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Handle task renamed events
     this.subscriptions.push(
       this.taskService.taskRenamed$.subscribe(event => {
         if (event.title) {
@@ -86,7 +81,9 @@ export class TaskListComponent implements OnInit, OnDestroy {
     this.taskService.createTask(this.newTaskTitle).subscribe({
       // We don't take any action here, as updating the UI occurs in the
         // $taskCreated subscription
-      next: _ => { },
+      next: _ => { 
+        this.newTaskTitle = '';
+      },
       error: (error) => {
         console.error('Error creating task:', error);
       }
@@ -96,8 +93,6 @@ export class TaskListComponent implements OnInit, OnDestroy {
   deleteTask(taskId: string): void {
     this.taskService.deleteTask(taskId).subscribe({
       next: () => {
-        // Remove the task from our list immediately based on the API response
-        // The WebSocket event will be handled separately but won't cause duplication
         this.tasks = this.tasks.filter(task => task.id !== taskId);
       },
       error: (error) => {
@@ -111,13 +106,51 @@ export class TaskListComponent implements OnInit, OnDestroy {
     
     this.taskService.toggleTaskCompletion(task.id, newStatus).subscribe({
       next: () => {
-        // Update the task status immediately based on the API response
         this.tasks = this.tasks.map(t => 
           t.id === task.id ? { ...t, complete: newStatus } : t
         );
       },
       error: (error) => {
         console.error('Error toggling task completion:', error);
+      }
+    });
+  }
+
+  startEditing(task: Task): void {
+    if (task.isEditing) return;
+
+    this.taskService.beginEdition(task.id).subscribe({
+      next: (response) => {
+        this.tasks = this.tasks.map(t => 
+          t.id === task.id ? { ...t, isEditing: true, editionId: response.editionId } : t
+        );
+      },
+      error: (error) => {
+        console.error('Error beginning task edition:', error);
+        if (error.message === 'RENAMING_LOCKED') {
+          alert('Renaming locked');
+        }
+      }
+    });
+  }
+
+  saveEditing(task: Task): void {
+    if (!task.editionId) {
+      console.error('Cannot save task without an editionId');
+      return;
+    }
+
+    this.taskService.endEdition(task.id, task.editionId, task.title).subscribe({
+      next: () => {
+        this.tasks = this.tasks.map(t => 
+          t.id === task.id ? { ...t, isEditing: false, editionId: undefined } : t
+        );
+      },
+      error: (error) => {
+        console.error('Error saving task edition:', error);
+        this.tasks = this.tasks.map(t => 
+          t.id === task.id ? { ...t, isEditing: false, editionId: undefined } : t
+        );
       }
     });
   }

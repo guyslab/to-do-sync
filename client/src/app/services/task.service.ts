@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject, merge, of, timer } from 'rxjs';
-import { map, groupBy, mergeMap, take, takeUntil, share } from 'rxjs/operators';
-import { Task, TasksResponse, TaskEvent } from '../models/task.model';
+import { Observable, Subject, merge, of, timer, throwError } from 'rxjs';
+import { map, groupBy, mergeMap, take, takeUntil, share, catchError } from 'rxjs/operators';
+import { Task, TasksResponse, TaskEvent, EditionResponse } from '../models/task.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -102,6 +102,23 @@ export class TaskService {
   toggleTaskCompletion(taskId: string, complete: boolean): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/tasks/${taskId}/completion`, { complete });
   }
+
+  beginEdition(taskId: string): Observable<EditionResponse> {
+    return this.http.post<EditionResponse>(`${this.apiUrl}/tasks/${taskId}/editions`, {})
+      .pipe(
+        catchError(error => {
+          if (error.status === 409) {
+            return throwError(() => new Error('RENAMING_LOCKED'));
+          }
+          return throwError(() => error);
+        })
+      );
+  }
+
+  endEdition(taskId: string, editionId: string, title: string): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/tasks/${taskId}/editions/${editionId}`, { title });
+  }
+  
   private createDeduplicated$(): Observable<Task> {
     // Convert WebSocket TaskEvent to a format that can be compared with HTTP Task
     const wsSource$ = this.taskCreatedSubject.asObservable();

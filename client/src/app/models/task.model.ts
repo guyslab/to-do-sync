@@ -3,6 +3,8 @@ export interface Task {
   title: string;
   complete: boolean;
   createdAt: string;
+  isEditing?: boolean;
+  editionId?: string;
 }
 
 export interface TasksResponse {
@@ -13,4 +15,9 @@ export interface TasksResponse {
 export interface TaskEvent {
   taskId: string;
   title?: string;
+}
+
+export interface EditionResponse {
+  editionId: string;
+  expires: string;
 }
