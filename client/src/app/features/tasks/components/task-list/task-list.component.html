@@ -1,16 +1,20 @@
-<div class="task-list-container">
-  <h1>To-Do List</h1>
+<div class="task-list-container mat-elevation-z2">
+  <mat-toolbar color="primary">
+    <h1>To-Do List</h1>
+  </mat-toolbar>
   
   <app-task-form></app-task-form>
   
-  <div *ngIf="tasks.length === 0" class="empty-state">
-    <p>No tasks yet. Add one above!</p>
-  </div>
+  <mat-card *ngIf="tasks.length === 0" class="empty-state">
+    <mat-card-content>
+      <p>No tasks yet. Add one above!</p>
+    </mat-card-content>
+  </mat-card>
   
-  <div class="task-list">
+  <mat-list class="task-list">
     <app-task-item 
       *ngFor="let task of tasks" 
       [task]="task">
     </app-task-item>
-  </div>
+  </mat-list>
 </div>

@@ -1,23 +1,16 @@
 .task-list-container {
   max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-h1 {
-  color: #333;
-  text-align: center;
-  margin-bottom: 30px;
+  margin: 20px auto;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .empty-state {
   text-align: center;
   padding: 20px;
-  background-color: #f5f5f5;
-  border-radius: 4px;
-  color: #666;
+  margin: 20px 0;
 }
 
 .task-list {
-  margin-top: 20px;
+  padding: 0;
 }

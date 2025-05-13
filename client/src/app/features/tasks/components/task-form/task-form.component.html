@@ -1,8 +1,11 @@
 <div class="task-form">
-  <input 
-    type="text" 
-    placeholder="Add a new task" 
-    [(ngModel)]="newTaskTitle"
-    (keyup.enter)="addTask()">
-  <button (click)="addTask()">Add Task</button>
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Add a new task</mat-label>
+    <input matInput
+           [(ngModel)]="newTaskTitle"
+           (keyup.enter)="addTask()">
+    <button mat-icon-button matSuffix (click)="addTask()" [disabled]="!newTaskTitle || newTaskTitle.trim() === ''">
+      <mat-icon>add</mat-icon>
+    </button>
+  </mat-form-field>
 </div>

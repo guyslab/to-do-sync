@@ -1,24 +1,31 @@
-<div class="task-item" [class.completed]="task.complete">
-  <div class="task-content">
-    <input 
-      type="checkbox" 
-      [checked]="task.complete" 
-      (change)="toggleCompletion()">
-    
-    <span *ngIf="!task.isEditing" 
-          class="task-title"
-          (click)="startEditing()">
-      {{ task.title }}
-    </span>
-    
-    <div *ngIf="task.isEditing" class="edit-container">
-      <input 
-        type="text" 
-        [(ngModel)]="task.title" 
-        (keyup.enter)="saveEditing()">
-      <button (click)="saveEditing()">Save</button>
-    </div>
+<mat-list-item class="task-item" [class.completed]="task.complete">
+  <div class="task-row">
+   <div class="task-content">
+     <mat-checkbox 
+       [checked]="task.complete" 
+       (change)="toggleCompletion()">
+     </mat-checkbox>
+     
+     <span *ngIf="!task.isEditing" 
+           class="task-title"
+           (click)="startEditing()">
+       {{ task.title }}
+     </span>
+     
+     <div *ngIf="task.isEditing" class="edit-container">
+       <mat-form-field appearance="outline">
+         <input matInput
+                [(ngModel)]="task.title" 
+                (keyup.enter)="saveEditing()">
+       </mat-form-field>
+       <button mat-icon-button color="primary" (click)="saveEditing()">
+         <mat-icon>check</mat-icon>
+       </button>
+     </div>
+   </div>
+   
+   <button mat-icon-button color="warn" (click)="deleteTask()">
+     <mat-icon>delete</mat-icon>
+   </button>
   </div>
-  
-  <button class="delete-btn" (click)="deleteTask()">Delete</button>
-</div>
+</mat-list-item>
