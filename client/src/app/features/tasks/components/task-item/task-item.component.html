@@ -1,0 +1,24 @@
+<div class="task-item" [class.completed]="task.complete">
+  <div class="task-content">
+    <input 
+      type="checkbox" 
+      [checked]="task.complete" 
+      (change)="toggleCompletion()">
+    
+    <span *ngIf="!task.isEditing" 
+          class="task-title"
+          (click)="startEditing()">
+      {{ task.title }}
+    </span>
+    
+    <div *ngIf="task.isEditing" class="edit-container">
+      <input 
+        type="text" 
+        [(ngModel)]="task.title" 
+        (keyup.enter)="saveEditing()">
+      <button (click)="saveEditing()">Save</button>
+    </div>
+  </div>
+  
+  <button class="delete-btn" (click)="deleteTask()">Delete</button>
+</div>

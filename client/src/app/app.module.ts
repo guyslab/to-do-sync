@@ -1,20 +1,20 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
 
 import { AppComponent } from './app.component';
-import { TaskListComponent } from './components/task-list/task-list.component';
+import { CoreModule } from './core/core.module';
+import { SharedModule } from './shared/shared.module';
+import { TasksModule } from './features/tasks/tasks.module';
 
 @NgModule({
   declarations: [
-    AppComponent,
-    TaskListComponent
+    AppComponent
   ],
   imports: [
     BrowserModule,
-    FormsModule,
-    HttpClientModule
+    CoreModule,
+    SharedModule,
+    TasksModule
   ],
   providers: [],
   bootstrap: [AppComponent]
