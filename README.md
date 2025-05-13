@@ -56,3 +56,24 @@ MONGODB_DB_NAME=todos
 # Application Settings
 EDITION_EXPIRATION_MINUTES=3
 ```
+
+## Key Design Decisions and Patterns
+
+### Backend (Server)
+- **Domain-Driven Design**: Core business logic encapsulated in domain objects
+- **Unit of Work Pattern**: Transaction management for data consistency
+- **Repository Pattern**: Abstraction layer over MongoDB operations
+- **Event-Driven Architecture**: WebSocket events for real-time updates
+- **CQRS**: Separate command and query responsibilities
+- **Middleware Pipeline**: Request validation, authentication, and error handling
+- **Dependency Injection**: Loose coupling between components
+- **Optimistic Concurrency**: Using version fields to handle concurrent edits
+
+### Frontend (Client)
+- **Reactive Programming**: Using RxJS for event streams and state management
+- **Component-Based Architecture**: Modular UI components with clear responsibilities
+- **Unidirectional Data Flow**: State flows down, events flow up
+- **Observable Store Pattern**: Central state management with observables
+- **Change Detection Strategy**: OnPush for performance optimization
+- **WebSocket Integration**: Real-time data synchronization with server
+- **Lazy Loading**: Modules loaded on demand for better initial load time
